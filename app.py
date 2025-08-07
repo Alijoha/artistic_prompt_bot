@@ -241,6 +241,25 @@ if uploaded_file:
 
             except Exception as e:
                 st.error(f"Image analysis failed: {str(e)}")
-# --- FOOTER ---
-st.markdown("---")
-st.markdown("© 2025 Johanna Polanco ❤️ With Love — All rights reserved.")
+# Custom footer (centered with white background)
+footer = """
+    <style>
+        .footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: white;
+            color: black;
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            z-index: 100;
+            box-shadow: 0 -1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+    <div class="footer">
+        © 2025 Johanna Polanco ❤️ With Love ❤️ — All rights reserved.
+    </div>
+"""
+st.markdown(footer, unsafe_allow_html=True)
