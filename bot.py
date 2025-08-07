@@ -1,55 +1,74 @@
+import streamlit as st
 import os
 import openai
-import requests
 from dotenv import load_dotenv
+from io import BytesIO
+from reportlab.pdfgen import canvas
+import zipfile
 
-# Load API keys
+# Load environment variables
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Initialize OpenAI client
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def generate_prompts(theme, style, mood):
-    """Generates MidJourney and Artistly prompts."""
-    prompt_request = f"""
-    You are an expert AI art prompt engineer. Create two separate prompts:
-
-    Theme: {theme}
-    Style: {style}
-    Mood: {mood}
-
-    1. MidJourney Prompt:
-    - Include detailed scene, subject, environment, colors, mood.
-    - Add MidJourney parameters (--ar 1:1 --q 2 --stylize 500).
-    - Be visually rich and cinematic.
-
-    2. Artistly.ai Prompt:
-    - Detailed description only, no parameters.
-    - Highly visual, artistic, descriptive.
-
-    Output clearly labeled for each platform.
+def generate_prompt(user_prompt, refinement):
     """
+    Generate a creative or optimized prompt based on user input and refinement option.
+    """
+    if refinement == "🔥 Raw creative prompt":
+        system_msg = "You are a creative AI that generates vivid, imaginative, artistic prompts."
+    elif refinement == "🎯 Optimized for AI clarity":
+        system_msg = "You are an AI trained to write clear, structured prompts optimized for use in MidJourney, DALL·E, and Artisly.ai."
+    else:
+        system_msg = "You are an AI that first gives a raw, artistic version of the prompt, followed by a version optimized for AI clarity."
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt_request}],
-        temperature=0.85,
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": user_prompt}
+        ],
         max_tokens=400
     )
 
     return response.choices[0].message.content
 
+def show_cache_clear_button():
+    if st.button("🔄 Clear Cache"):
+        st.cache_data.clear()
+        st.success("Cache cleared!")
 
-def generate_dalle_image(prompt):
-    """Generates an image using DALL·E 3."""
-    try:
-        result = client.images.generate(
-            model="dall-e-3",
-            prompt=prompt,
-            size="1024x1024"
-        )
-        return result.data[0].url
-    except Exception as e:
-        print("DALL·E error:", e)
-        return None
+def download_prompt_as_txt(prompt):
+    return BytesIO(prompt.encode("utf-8"))
+
+def download_prompt_as_pdf(prompt):
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer)
+    textobject = c.beginText(40, 800)
+    for line in prompt.split("\n"):
+        textobject.textLine(line)
+    c.drawText(textobject)
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+    return buffer
+
+def create_zip_file(prompt, image_url=None):
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w") as zipf:
+        # Add TXT
+        zipf.writestr("prompt.txt", prompt)
+        
+        # Add PDF
+        pdf_bytes = download_prompt_as_pdf(prompt).read()
+        zipf.writestr("prompt.pdf", pdf_bytes)
+
+        # Add image (placeholder)
+        if image_url:
+            import requests
+            image_data = requests.get(image_url).content
+            zipf.writestr("preview.png", image_data)
+
+    zip_buffer.seek(0)
+    return zip_buffer
