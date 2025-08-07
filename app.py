@@ -43,6 +43,29 @@ st.markdown("""
     .stTextInput>div>input, .stSelectbox>div>div {
         background-color: #161b22; color: #c9d1d9;
     }
+            
+   /* === Mobile-friendly pickers (Theme, Style, Mood, Language, Refinement) === */
+@media (max-width: 560px) {
+  /* Make all selectboxes and radios easier to tap */
+  .stSelectbox div[data-baseweb="select"] { min-height: 52px; }
+  .stSelectbox * { font-size: 16px !important; line-height: 1.2; }
+
+  .stRadio > div { gap: 10px; }
+  .stRadio label { padding: 8px 10px; border-radius: 8px; }
+  .stRadio * { font-size: 16px !important; }
+
+  /* Buttons a bit larger */
+  .stButton > button { padding: 12px 16px; font-size: 16px; border-radius: 8px; }
+
+  /* Inputs full-width */
+  .stSelectbox, .stTextInput, .stRadio, .stButton { width: 100% !important; }
+}
+
+/* Taller dropdown list so users can scroll more options on phones */
+div[role="listbox"] { max-height: 65vh !important; }
+
+/* Slightly bigger hit area on all screens */
+.stSelectbox div[data-baseweb="select"] { min-height: 44px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -59,28 +82,60 @@ st.markdown("Generate prompts for MidJourney, Artisly.ai — and preview DALL·E
 show_cache_clear_button()
 
 # --- USER INPUTS ---
-theme = st.selectbox("🖋️ Theme", [
-    "Elf Queen in an enchanted forest", "Cyberpunk city skyline at night", "Underwater steampunk laboratory",
-    "Haunted Victorian mansion", "Magical animal tea party", "Floating crystal island",
-    "Ancient jungle ruins", "Dreamy cloud kingdom", "Neon Tokyo alleyway", "Surreal clockwork garden",
-    "Galactic dragon shrine", "Rainy street café", "Mythical phoenix rebirth",
-    "Retro-futuristic arcade", "Whimsical flying train", "Alien carnival at dusk"
-])
+# THEME
+theme = st.selectbox(
+    "🖋️ Theme",
+    [
+        # existing
+        "Elf Queen in an enchanted forest", "Cyberpunk city skyline at night", "Underwater steampunk laboratory",
+        "Haunted Victorian mansion", "Magical animal tea party", "Floating crystal island",
+        "Ancient jungle ruins", "Dreamy cloud kingdom", "Neon Tokyo alleyway", "Surreal clockwork garden",
+        "Galactic dragon shrine", "Rainy street café", "Mythical phoenix rebirth",
+        "Retro-futuristic arcade", "Whimsical flying train", "Alien carnival at dusk",
+        # added popular universes
+        "Marvel Universe", "DC Comics Universe", "Star Wars Galaxy", "Disney Fairytale Kingdom",
+        "Pixar Animated World", "Harry Potter Wizarding World", "Lord of the Rings Middle-earth",
+        "Game of Thrones Westeros", "Avatar: The Last Airbender World", "Pokemon Universe",
+        "Zelda: Hyrule", "Final Fantasy Realm", "Genshin Impact World", "My Hero Academia City"
+    ],
+    index=None,
+    placeholder="Pick or type a theme…"
+)
 
-style = st.selectbox("🎨 Style", [
-    "Watercolor", "Oil Painting", "Graffiti", "Sketch", "Pop Surrealism", "Lowbrow Art",
-    "Pixel Art", "Digital Matte Painting", "Studio Ghibli Style", "Ink & Wash", "Concept Art",
-    "3D Render", "Chalk Pastel", "Alcohol Ink", "Mosaic Art", "Origami Paper Style",
-    "Vaporwave", "Cyberpunk", "Art Nouveau", "Steampunk", "Tattoo Flash", "Woodcut Print",
-    "Dark Fantasy", "Line Art", "Cartoon"
-])
+# STYLE
+style = st.selectbox(
+    "🎨 Style",
+    [
+        "Watercolor", "Oil Painting", "Graffiti", "Sketch", "Pop Surrealism", "Lowbrow Art",
+        "Pixel Art", "Digital Matte Painting", "Studio Ghibli Style", "Ink & Wash", "Concept Art",
+        "3D Render", "Chalk Pastel", "Alcohol Ink", "Mosaic Art", "Origami Paper Style",
+        "Vaporwave", "Cyberpunk", "Art Nouveau", "Steampunk", "Tattoo Flash", "Woodcut Print",
+        "Dark Fantasy", "Line Art", "Cartoon",
+        # extra styles
+        "Solarpunk", "Dieselpunk", "Biopunk", "Baroque Engraving", "Ukiyo-e",
+        "Photobashing", "Cinematic Realism", "Isometric Diorama", "Liminal Space",
+        "Low-Poly 3D", "Cel-Shaded", "Pastelcore", "Noir Comic", "Pixel RPG UI"
+    ],
+    index=None,
+    placeholder="Pick or type a style…"
+)
 
-mood = st.selectbox("✨ Mood", [
-    "Whimsical", "Mystical", "Ethereal", "Melancholic", "Dreamy", "Uplifting",
-    "Dark Fantasy", "Surreal", "Elegant", "Dramatic", "Romantic", "Peaceful",
-    "Intense", "Futuristic", "Retro", "Minimalist", "Cinematic", "Noir",
-    "Joyful", "Tranquil", "Spooky", "Playful", "Epic", "Spiritual", "Nostalgic"
-])
+# MOOD
+mood = st.selectbox(
+    "✨ Mood",
+    [
+        "Whimsical", "Mystical", "Ethereal", "Melancholic", "Dreamy", "Uplifting",
+        "Dark Fantasy", "Surreal", "Elegant", "Dramatic", "Romantic", "Peaceful",
+        "Intense", "Futuristic", "Retro", "Minimalist", "Cinematic", "Noir",
+        "Joyful", "Tranquil", "Spooky", "Playful", "Epic", "Spiritual", "Nostalgic",
+        # extra moods
+        "Cozy", "Hopeful", "Somber", "Euphoric", "Wholesome", "Gritty",
+        "Mysterious", "Whirlwind", "Melodic", "Sacred", "Otherworldly", "Zen",
+        "High-Energy", "Cold & Sterile", "Warm & Inviting"
+    ],
+    index=None,
+    placeholder="Pick or type a mood…"
+)
 
 language = st.selectbox("🌍 Output Language", [
     "English", "Spanish", "French", "German", "Portuguese",
