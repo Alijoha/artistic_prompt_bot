@@ -4,3 +4,4 @@ python-dotenv
 requests
 reportlab
 deep-translator
+supabase>=2.5.0
