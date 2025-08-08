@@ -81,11 +81,34 @@ st.markdown("Generate prompts for MidJourney, Artisly.ai — and preview DALL·E
 # --- CACHE CLEAR ---
 show_cache_clear_button()
 
+# Allow preset OR custom free‑text for any field
+def combo_select(label: str, options: list[str], key_prefix: str) -> str:
+    preset = st.selectbox(
+        label,
+        ["✏️ Type your own…"] + options,
+        index=0,
+        key=f"{key_prefix}_preset",
+        placeholder=f"Pick {label.lower()} or type your own…",
+    )
+    if preset == "✏️ Type your own…":
+        custom = st.text_input(
+            f"{label} (custom)",
+            key=f"{key_prefix}_custom",
+            placeholder=f"Type any {label.lower()}…",
+        )
+        return (custom or "").strip()
+    else:
+        # Clear any old custom text if a preset is chosen
+        st.session_state[f"{key_prefix}_custom"] = ""
+        return preset
+
 # --- USER INPUTS ---
-# THEME
-theme = st.selectbox(
+
+# === THEME ===
+theme_choice = st.selectbox(
     "🖋️ Theme",
     [
+        "✏️ Type your own…",
         # existing
         "Elf Queen in an enchanted forest", "Cyberpunk city skyline at night", "Underwater steampunk laboratory",
         "Haunted Victorian mansion", "Magical animal tea party", "Floating crystal island",
@@ -98,14 +121,20 @@ theme = st.selectbox(
         "Game of Thrones Westeros", "Avatar: The Last Airbender World", "Pokemon Universe",
         "Zelda: Hyrule", "Final Fantasy Realm", "Genshin Impact World", "My Hero Academia City"
     ],
-    index=None,
+    index=0,
     placeholder="Pick or type a theme…"
 )
+if theme_choice == "✏️ Type your own…":
+    theme_custom = st.text_input("Custom Theme")
+    theme = theme_custom.strip()
+else:
+    theme = theme_choice
 
-# STYLE
-style = st.selectbox(
+# === STYLE ===
+style_choice = st.selectbox(
     "🎨 Style",
     [
+        "✏️ Type your own…",
         "Watercolor", "Oil Painting", "Graffiti", "Sketch", "Pop Surrealism", "Lowbrow Art",
         "Pixel Art", "Digital Matte Painting", "Studio Ghibli Style", "Ink & Wash", "Concept Art",
         "3D Render", "Chalk Pastel", "Alcohol Ink", "Mosaic Art", "Origami Paper Style",
@@ -114,16 +143,87 @@ style = st.selectbox(
         # extra styles
         "Solarpunk", "Dieselpunk", "Biopunk", "Baroque Engraving", "Ukiyo-e",
         "Photobashing", "Cinematic Realism", "Isometric Diorama", "Liminal Space",
-        "Low-Poly 3D", "Cel-Shaded", "Pastelcore", "Noir Comic", "Pixel RPG UI"
+        "Low-Poly 3D", "Cel-Shaded", "Pastelcore", "Noir Comic", "Pixel RPG UI",
+        # added realistic styles
+        "3D Realistic", "Photorealism",
+        # 🔥 Etsy-focused outputs
+        "Product Mockup (T-Shirt)", "Product Mockup (Mug)", "Product Mockup (Wall Art)",
+        "Sticker Pack (Die-Cut)", "Sticker (Kiss-Cut)", "Sticker (Holographic Look)",
+        "Clip Art Set (PNG Transparent)", "SVG Clip Art", "Printable Coloring Page",
+        "Seamless Pattern (Repeat Tile)", "Patterned Paper Pack"
     ],
-    index=None,
+    index=0,
     placeholder="Pick or type a style…"
 )
+if style_choice == "✏️ Type your own…":
+    style_custom = st.text_input("Custom Style")
+    style = style_custom.strip()
+else:
+    style = style_choice
 
-# MOOD
-mood = st.selectbox(
+# === Etsy tips feature ===
+apply_output_tips = st.checkbox(
+    "Auto-apply Etsy output tips",
+    value=True,
+    help="Adds practical print/seller notes to your prompt (transparent PNGs, bleed, mockups, etc.)."
+)
+
+def etsy_tips_for_style(style_name: str) -> str:
+    s = (style_name or "").lower()
+
+    if "sticker" in s:
+        return (
+            "Sticker production specs: crisp vector-like edges, high contrast, clean silhouette; "
+            "white offset stroke (2–4px) around subject; transparent background PNG (300 DPI); "
+            "die-cut friendly outline; avoid photo backgrounds."
+        )
+
+    if "clip art" in s or "svg" in s:
+        return (
+            "Clip art set specs: simple shapes, flat fills, smooth paths; clean isolated subject "
+            "on transparent background (PNG 300 DPI) and SVG version; consistent palette and stroke weight."
+        )
+
+    if "mockup" in s:
+        if "t-shirt" in s or "shirt" in s:
+            return (
+                "Apparel mockup specs: front-view unisex crewneck on neutral studio background, "
+                "natural fabric folds, realistic lighting, true-to-size print area; high-res 3000px+."
+            )
+        if "mug" in s:
+            return (
+                "Mug mockup specs: 11oz ceramic mug 3/4 view on minimalist surface, soft shadows, "
+                "centered print area, high-res 3000px+."
+            )
+        if "wall art" in s or "poster" in s:
+            return (
+                "Wall art mockup specs: framed poster on clean wall, soft daylight, slight parallax, "
+                "room decor minimal, no glare; high-res 3000px+."
+            )
+        return (
+            "Product mockup specs: neutral studio scene, accurate proportions, soft realistic shadows, "
+            "no heavy branding; high-res 3000px+."
+        )
+
+    if "pattern" in s or "seamless" in s or "paper pack" in s:
+        return (
+            "Pattern specs: perfectly seamless tile, edges match, repeatable motif, even spacing; "
+            "export square 2048–4096px tile; high contrast and clean edges."
+        )
+
+    if "photoreal" in s or "photorealism" in s or "3d realistic" in s:
+        return (
+            "Photoreal specs: lifelike materials, realistic lighting and shadows, subtle imperfections, "
+            "natural color balance; depth of field and accurate perspective."
+        )
+
+    return ""
+
+# === MOOD ===
+mood_choice = st.selectbox(
     "✨ Mood",
     [
+        "✏️ Type your own…",
         "Whimsical", "Mystical", "Ethereal", "Melancholic", "Dreamy", "Uplifting",
         "Dark Fantasy", "Surreal", "Elegant", "Dramatic", "Romantic", "Peaceful",
         "Intense", "Futuristic", "Retro", "Minimalist", "Cinematic", "Noir",
@@ -133,9 +233,14 @@ mood = st.selectbox(
         "Mysterious", "Whirlwind", "Melodic", "Sacred", "Otherworldly", "Zen",
         "High-Energy", "Cold & Sterile", "Warm & Inviting"
     ],
-    index=None,
+    index=0,
     placeholder="Pick or type a mood…"
 )
+if mood_choice == "✏️ Type your own…":
+    mood_custom = st.text_input("Custom Mood")
+    mood = mood_custom.strip()
+else:
+    mood = mood_choice
 
 language = st.selectbox("🌍 Output Language", [
     "English", "Spanish", "French", "German", "Portuguese",
@@ -151,7 +256,8 @@ st.markdown("### ✨ Expand a Short Idea into a Full Prompt")
 quick_idea = st.text_input("💡 Enter a short idea (e.g. magical forest cat)")
 if st.button("Expand Prompt"):
     with st.spinner("Expanding..."):
-        base_prompt = f"{quick_idea}. Style: {style}. Mood: {mood}"
+        tips = etsy_tips_for_style(style) if apply_output_tips else ""
+        base_prompt = f"{quick_idea}. Style: {style}. Mood: {mood}. {tips}".strip()
         expanded = generate_prompt(base_prompt, refinement)
         if refinement == "🪄 Both":
             raw, optimized = expanded.split("###OPTIMIZED###")
@@ -171,7 +277,8 @@ if st.button("Expand Prompt"):
 # --- GENERATE PROMPTS ---
 if st.button("Generate Prompts"):
     with st.spinner("Generating prompts..."):
-        user_prompt = f"{theme}. Style: {style}. Mood: {mood}"
+        tips = etsy_tips_for_style(style) if apply_output_tips else ""
+        user_prompt = f"{theme}. Style: {style}. Mood: {mood}. {tips}".strip()
         prompt = generate_prompt(user_prompt, refinement)
 
         st.session_state["last_refinement"] = refinement
