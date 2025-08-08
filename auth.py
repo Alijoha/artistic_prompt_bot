@@ -35,12 +35,17 @@ def auth_ui():
     if "user" not in st.session_state:
         st.session_state["user"] = None
 
+    # NEW: nonce so form keys are always unique (prevents duplicate-key crash)
+    nonce = st.session_state.get("auth_nonce", 0)
+    st.session_state["auth_nonce"] = nonce + 1
+
     tab_login, tab_signup = st.tabs(["Sign in", "Create account"])
 
     with tab_login:
-        with st.form("login_form", clear_on_submit=False):
-            email = st.text_input("Email", autocomplete="email")
-            password = st.text_input("Password", type="password")
+        # 🔑 make the form + inputs unique per render
+        with st.form(f"login_form_{nonce}", clear_on_submit=False):
+            email = st.text_input("Email", key=f"li_email_{nonce}", autocomplete="email")
+            password = st.text_input("Password", key=f"li_pw_{nonce}", type="password")
             submitted = st.form_submit_button("Sign in")
         if submitted:
             if not email or not password:
@@ -54,9 +59,10 @@ def auth_ui():
                     st.error(f"Sign-in failed: {e}")
 
     with tab_signup:
-        with st.form("signup_form", clear_on_submit=False):
-            email_su = st.text_input("Email ", key="su_email", autocomplete="email")
-            password_su = st.text_input("Password ", key="su_pw", type="password")
+        # 🔑 make the form + inputs unique per render
+        with st.form(f"signup_form_{nonce}", clear_on_submit=False):
+            email_su = st.text_input("Email ", key=f"su_email_{nonce}", autocomplete="email")
+            password_su = st.text_input("Password ", key=f"su_pw_{nonce}", type="password")
             submitted_su = st.form_submit_button("Create account")
         if submitted_su:
             if not email_su or not password_su:
